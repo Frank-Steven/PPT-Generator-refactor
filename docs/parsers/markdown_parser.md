@@ -454,14 +454,14 @@ new_slides = current_slide.map(
 
 **示例**:
 
-```markdown
+````markdown
 # 代码示例
 
 ```python
 def hello():
     print("Hello, World!")
 ```
-```
+````
 
 **解析结果**: 一个 `SlideItemType.CODE` 类型的内容项，meta中包含 `language` 字段。
 
