@@ -9,23 +9,23 @@
 """
 
 from pathlib import Path
+
 from pptx import Presentation
-from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-
+from pptx.enum.text import PP_ALIGN
+from pptx.util import Inches, Pt
 
 # 配色方案
-PRIMARY_COLOR = RGBColor(0x1F, 0x4E, 0x79)      # 主色：深蓝色
-SECONDARY_COLOR = RGBColor(0x2E, 0x75, 0xB6)    # 辅色：中蓝色
-ACCENT_COLOR = RGBColor(0x44, 0x72, 0xC4)       # 强调色：亮蓝色
-TEXT_DARK = RGBColor(0x33, 0x33, 0x33)          # 深色文本
-TEXT_LIGHT = RGBColor(0xFF, 0xFF, 0xFF)         # 浅色文本
-TEXT_GRAY = RGBColor(0x66, 0x66, 0x66)          # 灰色文本
-BG_LIGHT = RGBColor(0xF5, 0xF7, 0xFA)           # 浅色背景
-BG_WHITE = RGBColor(0xFF, 0xFF, 0xFF)           # 白色背景
-BORDER_COLOR = RGBColor(0xD0, 0xD7, 0xDE)       # 边框颜色
+PRIMARY_COLOR = RGBColor(0x1F, 0x4E, 0x79)  # 主色：深蓝色
+SECONDARY_COLOR = RGBColor(0x2E, 0x75, 0xB6)  # 辅色：中蓝色
+ACCENT_COLOR = RGBColor(0x44, 0x72, 0xC4)  # 强调色：亮蓝色
+TEXT_DARK = RGBColor(0x33, 0x33, 0x33)  # 深色文本
+TEXT_LIGHT = RGBColor(0xFF, 0xFF, 0xFF)  # 浅色文本
+TEXT_GRAY = RGBColor(0x66, 0x66, 0x66)  # 灰色文本
+BG_LIGHT = RGBColor(0xF5, 0xF7, 0xFA)  # 浅色背景
+BG_WHITE = RGBColor(0xFF, 0xFF, 0xFF)  # 白色背景
+BORDER_COLOR = RGBColor(0xD0, 0xD7, 0xDE)  # 边框颜色
 
 
 def set_text_style(
@@ -64,11 +64,11 @@ def add_shape(slide, shape_type, left, top, width, height, fill_color=None, line
 
 def add_text_box(slide, left, top, width, height, text, **kwargs):
     """添加文本框。"""
-    txBox = slide.shapes.add_textbox(left, top, width, height)
-    tf = txBox.text_frame
+    tx_box = slide.shapes.add_textbox(left, top, width, height)
+    tf = tx_box.text_frame
     tf.text = text
     set_text_style(tf, **kwargs)
-    return txBox
+    return tx_box
 
 
 def design_title_slide(slide, prs):
@@ -77,24 +77,31 @@ def design_title_slide(slide, prs):
     slide_height = prs.slide_height
 
     bg_shape = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, slide_height,
-        fill_color=BG_WHITE
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, slide_height, fill_color=BG_WHITE
     )
 
     accent_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.15), slide_height,
-        fill_color=PRIMARY_COLOR
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.15), slide_height, fill_color=PRIMARY_COLOR
     )
 
     top_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, Inches(0.15), 0, slide_width - Inches(0.15), Inches(0.08),
-        fill_color=ACCENT_COLOR
+        slide,
+        MSO_SHAPE.RECTANGLE,
+        Inches(0.15),
+        0,
+        slide_width - Inches(0.15),
+        Inches(0.08),
+        fill_color=ACCENT_COLOR,
     )
 
     bottom_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, Inches(0.15), slide_height - Inches(0.08),
-        slide_width - Inches(0.15), Inches(0.08),
-        fill_color=SECONDARY_COLOR
+        slide,
+        MSO_SHAPE.RECTANGLE,
+        Inches(0.15),
+        slide_height - Inches(0.08),
+        slide_width - Inches(0.15),
+        Inches(0.08),
+        fill_color=SECONDARY_COLOR,
     )
 
     for ph in slide.placeholders:
@@ -121,10 +128,14 @@ def design_title_slide(slide, prs):
                     run.font.color.rgb = TEXT_GRAY
 
     add_text_box(
-        slide, Inches(1.2), slide_height - Inches(0.7),
-        Inches(8), Inches(0.4),
+        slide,
+        Inches(1.2),
+        slide_height - Inches(0.7),
+        Inches(8),
+        Inches(0.4),
         "PPT-Generator | 标准母版模板",
-        font_size=10, color=TEXT_GRAY
+        font_size=10,
+        color=TEXT_GRAY,
     )
 
 
@@ -134,19 +145,21 @@ def design_title_and_content_slide(slide, prs):
     slide_height = prs.slide_height
 
     header_bg = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(1.2),
-        fill_color=BG_LIGHT
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(1.2), fill_color=BG_LIGHT
     )
 
     accent_line = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(1.15),
-        Inches(1.5), Inches(0.05),
-        fill_color=ACCENT_COLOR
+        slide,
+        MSO_SHAPE.RECTANGLE,
+        Inches(0.5),
+        Inches(1.15),
+        Inches(1.5),
+        Inches(0.05),
+        fill_color=ACCENT_COLOR,
     )
 
     left_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height,
-        fill_color=PRIMARY_COLOR
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height, fill_color=PRIMARY_COLOR
     )
 
     for ph in slide.placeholders:
@@ -173,17 +186,26 @@ def design_title_and_content_slide(slide, prs):
                     run.font.color.rgb = TEXT_DARK
 
     add_text_box(
-        slide, Inches(0.5), slide_height - Inches(0.5),
-        Inches(8), Inches(0.3),
+        slide,
+        Inches(0.5),
+        slide_height - Inches(0.5),
+        Inches(8),
+        Inches(0.3),
         "PPT-Generator Standard Template",
-        font_size=9, color=TEXT_GRAY
+        font_size=9,
+        color=TEXT_GRAY,
     )
 
     add_text_box(
-        slide, slide_width - Inches(1.5), slide_height - Inches(0.5),
-        Inches(1), Inches(0.3),
+        slide,
+        slide_width - Inches(1.5),
+        slide_height - Inches(0.5),
+        Inches(1),
+        Inches(0.3),
         "",
-        font_size=9, color=TEXT_GRAY, alignment=PP_ALIGN.RIGHT
+        font_size=9,
+        color=TEXT_GRAY,
+        alignment=PP_ALIGN.RIGHT,
     )
 
 
@@ -193,19 +215,21 @@ def design_section_header_slide(slide, prs):
     slide_height = prs.slide_height
 
     bg_shape = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, slide_height,
-        fill_color=BG_LIGHT
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, slide_height, fill_color=BG_LIGHT
     )
 
     left_panel = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(1.5), slide_height,
-        fill_color=PRIMARY_COLOR
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(1.5), slide_height, fill_color=PRIMARY_COLOR
     )
 
     accent_block = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, Inches(1.5), Inches(3),
-        Inches(0.12), Inches(1.2),
-        fill_color=ACCENT_COLOR
+        slide,
+        MSO_SHAPE.RECTANGLE,
+        Inches(1.5),
+        Inches(3),
+        Inches(0.12),
+        Inches(1.2),
+        fill_color=ACCENT_COLOR,
     )
 
     for ph in slide.placeholders:
@@ -222,10 +246,14 @@ def design_section_header_slide(slide, prs):
                     run.font.color.rgb = PRIMARY_COLOR
 
     add_text_box(
-        slide, Inches(2), Inches(4.2),
-        Inches(10), Inches(0.5),
+        slide,
+        Inches(2),
+        Inches(4.2),
+        Inches(10),
+        Inches(0.5),
         "Section Header",
-        font_size=14, color=TEXT_GRAY
+        font_size=14,
+        color=TEXT_GRAY,
     )
 
 
@@ -235,25 +263,31 @@ def design_two_content_slide(slide, prs):
     slide_height = prs.slide_height
 
     header_bg = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(1.2),
-        fill_color=BG_LIGHT
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(1.2), fill_color=BG_LIGHT
     )
 
     accent_line = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(1.15),
-        Inches(1.5), Inches(0.05),
-        fill_color=ACCENT_COLOR
+        slide,
+        MSO_SHAPE.RECTANGLE,
+        Inches(0.5),
+        Inches(1.15),
+        Inches(1.5),
+        Inches(0.05),
+        fill_color=ACCENT_COLOR,
     )
 
     left_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height,
-        fill_color=PRIMARY_COLOR
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height, fill_color=PRIMARY_COLOR
     )
 
     divider = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, Inches(6.45), Inches(1.5),
-        Inches(0.02), Inches(5.3),
-        fill_color=BORDER_COLOR
+        slide,
+        MSO_SHAPE.RECTANGLE,
+        Inches(6.45),
+        Inches(1.5),
+        Inches(0.02),
+        Inches(5.3),
+        fill_color=BORDER_COLOR,
     )
 
     for ph in slide.placeholders:
@@ -290,10 +324,14 @@ def design_two_content_slide(slide, prs):
                     run.font.color.rgb = TEXT_DARK
 
     add_text_box(
-        slide, Inches(0.5), slide_height - Inches(0.5),
-        Inches(8), Inches(0.3),
+        slide,
+        Inches(0.5),
+        slide_height - Inches(0.5),
+        Inches(8),
+        Inches(0.3),
         "PPT-Generator Standard Template",
-        font_size=9, color=TEXT_GRAY
+        font_size=9,
+        color=TEXT_GRAY,
     )
 
 
@@ -303,19 +341,21 @@ def design_content_with_caption_slide(slide, prs):
     slide_height = prs.slide_height
 
     header_bg = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(1.2),
-        fill_color=BG_LIGHT
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(1.2), fill_color=BG_LIGHT
     )
 
     accent_line = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(1.15),
-        Inches(1.5), Inches(0.05),
-        fill_color=ACCENT_COLOR
+        slide,
+        MSO_SHAPE.RECTANGLE,
+        Inches(0.5),
+        Inches(1.15),
+        Inches(1.5),
+        Inches(0.05),
+        fill_color=ACCENT_COLOR,
     )
 
     left_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height,
-        fill_color=PRIMARY_COLOR
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height, fill_color=PRIMARY_COLOR
     )
 
     for ph in slide.placeholders:
@@ -347,10 +387,14 @@ def design_content_with_caption_slide(slide, prs):
                     run.font.color.rgb = TEXT_GRAY
 
     add_text_box(
-        slide, Inches(0.5), slide_height - Inches(0.5),
-        Inches(8), Inches(0.3),
+        slide,
+        Inches(0.5),
+        slide_height - Inches(0.5),
+        Inches(8),
+        Inches(0.3),
         "PPT-Generator Standard Template",
-        font_size=9, color=TEXT_GRAY
+        font_size=9,
+        color=TEXT_GRAY,
     )
 
 
@@ -360,19 +404,21 @@ def design_picture_with_caption_slide(slide, prs):
     slide_height = prs.slide_height
 
     header_bg = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(1.2),
-        fill_color=BG_LIGHT
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(1.2), fill_color=BG_LIGHT
     )
 
     accent_line = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(1.15),
-        Inches(1.5), Inches(0.05),
-        fill_color=ACCENT_COLOR
+        slide,
+        MSO_SHAPE.RECTANGLE,
+        Inches(0.5),
+        Inches(1.15),
+        Inches(1.5),
+        Inches(0.05),
+        fill_color=ACCENT_COLOR,
     )
 
     left_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height,
-        fill_color=PRIMARY_COLOR
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height, fill_color=PRIMARY_COLOR
     )
 
     for ph in slide.placeholders:
@@ -404,10 +450,14 @@ def design_picture_with_caption_slide(slide, prs):
                     run.font.color.rgb = TEXT_GRAY
 
     add_text_box(
-        slide, Inches(0.5), slide_height - Inches(0.5),
-        Inches(8), Inches(0.3),
+        slide,
+        Inches(0.5),
+        slide_height - Inches(0.5),
+        Inches(8),
+        Inches(0.3),
         "PPT-Generator Standard Template",
-        font_size=9, color=TEXT_GRAY
+        font_size=9,
+        color=TEXT_GRAY,
     )
 
 
@@ -417,20 +467,22 @@ def design_blank_slide(slide, prs):
     slide_height = prs.slide_height
 
     left_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height,
-        fill_color=PRIMARY_COLOR
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.08), slide_height, fill_color=PRIMARY_COLOR
     )
 
     top_bar = add_shape(
-        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(0.04),
-        fill_color=ACCENT_COLOR
+        slide, MSO_SHAPE.RECTANGLE, 0, 0, slide_width, Inches(0.04), fill_color=ACCENT_COLOR
     )
 
     add_text_box(
-        slide, Inches(0.5), slide_height - Inches(0.5),
-        Inches(8), Inches(0.3),
+        slide,
+        Inches(0.5),
+        slide_height - Inches(0.5),
+        Inches(8),
+        Inches(0.3),
         "PPT-Generator Standard Template",
-        font_size=9, color=TEXT_GRAY
+        font_size=9,
+        color=TEXT_GRAY,
     )
 
 
@@ -465,13 +517,15 @@ def create_standard_template(output_path: Path) -> None:
             ph_idx = ph.placeholder_format.idx
             placeholders.append(f"{ph_name} (idx={ph_idx}, type={ph_type})")
 
-        layout_info.append({
-            "index": i,
-            "name": layout.name,
-            "placeholders": placeholders,
-        })
+        layout_info.append(
+            {
+                "index": i,
+                "name": layout.name,
+                "placeholders": placeholders,
+            }
+        )
 
-    for i, layout in enumerate(prs.slide_layouts):
+    for layout in prs.slide_layouts:
         layout_name = layout.name
         if layout_name in design_functions:
             slide = prs.slides.add_slide(layout)
@@ -481,8 +535,8 @@ def create_standard_template(output_path: Path) -> None:
             print(f"  跳过布局: {layout_name} (无设计函数)")
 
     while len(prs.slides) > 0:
-        rId = prs.slides._sldIdLst[0].rId
-        prs.part.drop_rel(rId)
+        r_id = prs.slides._sldIdLst[0].rId
+        prs.part.drop_rel(r_id)
         del prs.slides._sldIdLst[0]
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -496,7 +550,7 @@ def create_standard_template(output_path: Path) -> None:
     print(f"\n包含 {layout_count} 个布局:")
     for info in layout_info:
         print(f"\n  [{info['index']}] {info['name']}")
-        for ph in info['placeholders']:
+        for ph in info["placeholders"]:
             print(f"      - {ph}")
 
 

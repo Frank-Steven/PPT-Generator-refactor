@@ -9,26 +9,27 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from ..core.exceptions import InvalidConfigError, TemplateLoadError, MissingFileError
+from pptx import Presentation
+
+from ..core.exceptions import InvalidConfigError, MissingFileError, TemplateLoadError
 from ..core.models import (
-    ThemePack,
-    ThemePackManifest,
-    StyleConfig,
     CodeStyle,
-    MermaidStyle,
     LatexStyle,
-    TableStyle,
-    RunStyle,
-    RunOverrides,
+    LayoutAutoApply,
     LayoutConfig,
     LayoutDef,
-    LayoutGroupDef,
     LayoutDefaults,
+    LayoutGroupDef,
     LayoutPlaceholderDef,
-    LayoutAutoApply,
+    MermaidStyle,
+    RunOverrides,
+    RunStyle,
+    StyleConfig,
+    TableStyle,
+    ThemePack,
+    ThemePackManifest,
 )
 from ..utils import load_yaml_file
-from pptx import Presentation
 
 logger = logging.getLogger(__name__)
 
@@ -48,24 +49,24 @@ def load_theme_pack(theme_pack_path: Path | str) -> ThemePack:
         TemplateLoadError: 如果模板验证失败。
     """
     path = Path(theme_pack_path)
-    
+
     if not path.exists():
         raise MissingFileError(f"主题包目录不存在: {path}")
-    
+
     if not path.is_dir():
         raise InvalidConfigError(f"主题包路径必须是目录: {path}")
-    
+
     manifest = _load_manifest(path)
     template_path = _resolve_template_path(path, manifest)
     style_config = _load_style_config(path, manifest)
     layout_config = _load_layout_config(path, manifest)
-    
+
     _validate_template(template_path, layout_config)
-    
+
     preview_path = _resolve_optional_path(path, manifest.files.get("preview"))
     fonts_path = path / "fonts" if (path / "fonts").exists() else None
     assets_path = path / "assets" if (path / "assets").exists() else None
-    
+
     return ThemePack(
         manifest=manifest,
         template_path=template_path,
@@ -98,10 +99,10 @@ def _resolve_template_path(theme_pack_path: Path, manifest: ThemePackManifest) -
     """解析模板文件路径。"""
     template_filename = manifest.files.get("template", "template.pptx")
     template_path = theme_pack_path / template_filename
-    
+
     if not template_path.exists():
         raise MissingFileError(f"模板文件未找到: {template_path}")
-    
+
     return template_path
 
 
@@ -109,7 +110,7 @@ def _resolve_optional_path(theme_pack_path: Path, filename: str | None) -> Path 
     """解析可选文件路径。"""
     if not filename:
         return None
-    
+
     path = theme_pack_path / filename
     return path if path.exists() else None
 
@@ -118,10 +119,10 @@ def _load_style_config(theme_pack_path: Path, manifest: ThemePackManifest) -> St
     """加载style.yaml配置文件。"""
     style_filename = manifest.files.get("style", "style.yaml")
     style_path = theme_pack_path / style_filename
-    
+
     if not style_path.exists():
         return StyleConfig()
-    
+
     data = load_yaml_file(style_path, "style.yaml")
     return _parse_style_config(data)
 
@@ -140,7 +141,7 @@ def _parse_style_config(data: dict[str, Any]) -> StyleConfig:
         padding=code_data.get("padding", 12),
         line_height=code_data.get("line_height", 1.4),
     )
-    
+
     mermaid_data = data.get("mermaid", {})
     mermaid_style = MermaidStyle(
         theme=mermaid_data.get("theme", "dark"),
@@ -148,7 +149,7 @@ def _parse_style_config(data: dict[str, Any]) -> StyleConfig:
         scale=mermaid_data.get("scale", 2),
         padding=mermaid_data.get("padding", 10),
     )
-    
+
     latex_data = data.get("latex", {})
     latex_style = LatexStyle(
         font_size=latex_data.get("font_size", 14),
@@ -156,7 +157,7 @@ def _parse_style_config(data: dict[str, Any]) -> StyleConfig:
         dpi=latex_data.get("dpi", 300),
         color=latex_data.get("color", "#333333"),
     )
-    
+
     table_data = data.get("table", {})
     table_style = TableStyle(
         font=table_data.get("font", "微软雅黑"),
@@ -168,10 +169,10 @@ def _parse_style_config(data: dict[str, Any]) -> StyleConfig:
         border_color=table_data.get("border_color", "#CCCCCC"),
         border_width=table_data.get("border_width", 1),
     )
-    
+
     run_overrides_data = data.get("run_overrides", {})
     run_overrides = _parse_run_overrides(run_overrides_data)
-    
+
     return StyleConfig(
         code=code_style,
         mermaid=mermaid_style,
@@ -185,10 +186,10 @@ def _load_layout_config(theme_pack_path: Path, manifest: ThemePackManifest) -> L
     """加载layouts.yaml配置文件。"""
     layouts_filename = manifest.files.get("layouts", "layouts.yaml")
     layouts_path = theme_pack_path / layouts_filename
-    
+
     if not layouts_path.exists():
         raise MissingFileError(f"layouts.yaml未找到: {layouts_path}")
-    
+
     data = load_yaml_file(layouts_path, "layouts.yaml")
     return _parse_layout_config(data)
 
@@ -196,7 +197,7 @@ def _load_layout_config(theme_pack_path: Path, manifest: ThemePackManifest) -> L
 def _parse_layout_config(data: dict[str, Any]) -> LayoutConfig:
     """解析布局配置数据。"""
     version = data.get("version", "1.0")
-    
+
     defaults_data = data.get("defaults", {})
     defaults = LayoutDefaults(
         default=defaults_data.get("default", "title-and-content"),
@@ -208,7 +209,7 @@ def _parse_layout_config(data: dict[str, Any]) -> LayoutConfig:
         image=defaults_data.get("image", "picture-with-caption"),
         full_width=defaults_data.get("full_width", "blank"),
     )
-    
+
     groups_data = data.get("groups", {})
     groups = {}
     for group_id, group_data in groups_data.items():
@@ -219,14 +220,14 @@ def _parse_layout_config(data: dict[str, Any]) -> LayoutConfig:
             display_name=group_data.get("display_name"),
             description=group_data.get("description"),
         )
-    
+
     layouts_data = data.get("layouts", [])
     layouts = []
     for layout_data in layouts_data:
         if not isinstance(layout_data, dict):
             continue
         layouts.append(_parse_layout_def(layout_data))
-    
+
     return LayoutConfig(
         version=version,
         defaults=defaults,
@@ -242,14 +243,16 @@ def _parse_layout_def(data: dict[str, Any]) -> LayoutDef:
     for ph_data in placeholders_data:
         if not isinstance(ph_data, dict):
             continue
-        placeholders.append(LayoutPlaceholderDef(
-            index=ph_data.get("index", 0),
-            type=ph_data.get("type", ""),
-            role=ph_data.get("role"),
-            name=ph_data.get("name"),
-            description=ph_data.get("description"),
-        ))
-    
+        placeholders.append(
+            LayoutPlaceholderDef(
+                index=ph_data.get("index", 0),
+                type=ph_data.get("type", ""),
+                role=ph_data.get("role"),
+                name=ph_data.get("name"),
+                description=ph_data.get("description"),
+            )
+        )
+
     auto_apply_data = data.get("auto_apply")
     auto_apply = None
     if isinstance(auto_apply_data, dict):
@@ -259,7 +262,7 @@ def _parse_layout_def(data: dict[str, Any]) -> LayoutDef:
         )
     elif isinstance(auto_apply_data, list):
         auto_apply = LayoutAutoApply(conditions=auto_apply_data)
-    
+
     return LayoutDef(
         id=data.get("id", ""),
         name=data.get("name", ""),
@@ -279,7 +282,7 @@ def _parse_run_overrides(data: dict[str, Any]) -> RunOverrides:
     italic_style = _parse_run_style(data.get("italic", {}))
     code_style = _parse_run_style(data.get("code", {}))
     link_style = _parse_run_style(data.get("link", {}))
-    
+
     return RunOverrides(
         bold=bold_style,
         italic=italic_style,
@@ -310,16 +313,15 @@ def _validate_template(template_path: Path, layout_config: LayoutConfig) -> None
         prs = Presentation(str(template_path))
     except Exception as e:
         raise TemplateLoadError(f"无法加载模板文件: {e}") from e
-    
+
     template_layout_names = {layout.name for layout in prs.slide_layouts}
-    
+
     defined_layout_names = []
     for layout_def in layout_config.layouts:
         defined_layout_names.append(layout_def.name)
         if layout_def.name not in template_layout_names:
             raise InvalidConfigError(
-                f"模板缺少layouts.yaml中定义的布局: '{layout_def.name}' "
-                f"(id: {layout_def.id})"
+                f"模板缺少layouts.yaml中定义的布局: '{layout_def.name}' (id: {layout_def.id})"
             )
 
 
@@ -333,10 +335,10 @@ def list_available_themes(themes_dir: Path | str) -> list[ThemePackManifest]:
         主题包元数据列表。
     """
     path = Path(themes_dir)
-    
+
     if not path.exists():
         return []
-    
+
     manifests = []
     for item in path.iterdir():
         if item.is_dir():
@@ -345,8 +347,8 @@ def list_available_themes(themes_dir: Path | str) -> list[ThemePackManifest]:
                 try:
                     manifest = _load_manifest(item)
                     manifests.append(manifest)
-                except Exception as exc:
+                except Exception:
                     logger.warning(f"加载主题包失败，跳过: {item}", exc_info=True)
                     continue
-    
+
     return manifests

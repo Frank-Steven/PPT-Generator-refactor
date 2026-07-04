@@ -6,15 +6,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from pptx import Presentation
 
+from ppt_generator.core.models import (
+    LayoutSpec,
+    PlaceholderSpec,
+    SlideItem,
+    SlideItemType,
+    SlideSpec,
+)
 from ppt_generator.matching import LayoutMatcher
 from ppt_generator.parsers import MarkdownParser
-from ppt_generator.core.models import LayoutSpec, PlaceholderSpec, SlideItem, SlideItemType, SlideSpec
 from ppt_generator.templates import TemplateLoader
 
 
@@ -97,7 +103,9 @@ def sample_layout_spec() -> LayoutSpec:
         name="Title Slide",
         placeholders=[
             PlaceholderSpec(name="Title 1", placeholder_type="title", index=0, shape_id=1),
-            PlaceholderSpec(name="Content Placeholder 2", placeholder_type="body", index=1, shape_id=2),
+            PlaceholderSpec(
+                name="Content Placeholder 2", placeholder_type="body", index=1, shape_id=2
+            ),
         ],
     )
 
@@ -111,7 +119,9 @@ def sample_layouts(sample_layout_spec: LayoutSpec) -> list[LayoutSpec]:
             name="Title and Content",
             placeholders=[
                 PlaceholderSpec(name="Title 1", placeholder_type="title", index=0, shape_id=3),
-                PlaceholderSpec(name="Content Placeholder 2", placeholder_type="body", index=1, shape_id=4),
+                PlaceholderSpec(
+                    name="Content Placeholder 2", placeholder_type="body", index=1, shape_id=4
+                ),
             ],
         ),
         LayoutSpec(

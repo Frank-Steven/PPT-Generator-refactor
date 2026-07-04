@@ -68,7 +68,9 @@ class SlideItem:
         确保type是有效的SlideItemType枚举值，content是字符串。
         """
         if not isinstance(self.type, SlideItemType):
-            raise InvalidConfigError(f"SlideItem类型必须是SlideItemType枚举，得到: {type(self.type)}")
+            raise InvalidConfigError(
+                f"SlideItem类型必须是SlideItemType枚举，得到: {type(self.type)}"
+            )
         if not isinstance(self.content, str):
             raise InvalidConfigError(f"SlideItem内容必须是字符串，得到: {type(self.content)}")
 
@@ -349,7 +351,9 @@ class LayoutDef:
             raise InvalidConfigError("LayoutDef.placeholders必须是列表")
         for idx, ph in enumerate(self.placeholders):
             if not isinstance(ph, LayoutPlaceholderDef):
-                raise InvalidConfigError(f"LayoutDef.placeholders[{idx}]必须是LayoutPlaceholderDef实例")
+                raise InvalidConfigError(
+                    f"LayoutDef.placeholders[{idx}]必须是LayoutPlaceholderDef实例"
+                )
         if not isinstance(self.keywords, list):
             raise InvalidConfigError("LayoutDef.keywords必须是列表")
         if not isinstance(self.tags, list):

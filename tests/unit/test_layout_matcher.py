@@ -12,8 +12,8 @@ from __future__ import annotations
 import pytest
 from returns.maybe import Nothing
 
+from ppt_generator.core.models import SlideItem, SlideItemType, SlideSpec
 from ppt_generator.matching import LayoutMatcher
-from ppt_generator.core.models import SlideSpec, SlideItem, SlideItemType
 
 
 class TestLayoutMatcher:

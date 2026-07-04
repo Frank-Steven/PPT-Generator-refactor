@@ -26,7 +26,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from ..core.models import PrerenderConfig, LatexStyle
+from ..core.models import LatexStyle, PrerenderConfig
 from ..utils import hex_to_rgb, safe_run_subprocess
 from .base import BasePrerenderer
 
@@ -45,9 +45,7 @@ class LatexRenderer(BasePrerenderer):
         self._style = style
         self._renderer = self._detect_renderer()
 
-    def _render(
-        self, content: str, output_path: Path, *args: str
-    ) -> tuple[int, int] | None:
+    def _render(self, content: str, output_path: Path, *args: str) -> tuple[int, int] | None:
         """执行LaTeX渲染，返回图片尺寸。"""
         if self._renderer == "matplotlib":
             return self._render_with_matplotlib(content, output_path)
@@ -62,14 +60,17 @@ class LatexRenderer(BasePrerenderer):
         """检测可用的渲染器。"""
         try:
             import matplotlib
+
             matplotlib.use("Agg")
-            import matplotlib.pyplot as plt
+            import matplotlib.pyplot  # noqa: F401  检测可用性
+
             return "matplotlib"
         except ImportError:
             pass
 
         try:
-            import latex2svg
+            import latex2svg  # noqa: F401  检测可用性
+
             return "latex2svg"
         except ImportError:
             pass
@@ -87,12 +88,20 @@ class LatexRenderer(BasePrerenderer):
     def _render_with_matplotlib(self, latex_code: str, output_path: Path) -> tuple[int, int] | None:
         """使用matplotlib渲染LaTeX公式。"""
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
         try:
-            ax.text(0.5, 0.5, f"${latex_code}$", fontsize=self._style.font_size, ha="center", va="center")
+            ax.text(
+                0.5,
+                0.5,
+                f"${latex_code}$",
+                fontsize=self._style.font_size,
+                ha="center",
+                va="center",
+            )
             ax.axis("off")
 
             buf = self._style.background_color
@@ -101,7 +110,9 @@ class LatexRenderer(BasePrerenderer):
             else:
                 fig.patch.set_facecolor(buf)
 
-            plt.savefig(str(output_path), dpi=self._style.dpi, bbox_inches="tight", transparent=True)
+            plt.savefig(
+                str(output_path), dpi=self._style.dpi, bbox_inches="tight", transparent=True
+            )
 
             with Image.open(str(output_path)) as image:
                 return image.width, image.height

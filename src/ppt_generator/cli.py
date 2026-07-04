@@ -25,10 +25,10 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
-from .core import PPTGenerator, PPTGeneratorError, MissingFileError
+from .core import MissingFileError, PPTGenerator, PPTGeneratorError
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         logger.error(f"PPT生成错误: {e}")
         print(f"错误: {e}", file=sys.stderr)
         return 2
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.error(f"文件错误: {e}")
         print(f"文件错误: {e}", file=sys.stderr)
         return 3

@@ -30,7 +30,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from ..core.models import PrerenderConfig, MermaidStyle
+from ..core.models import MermaidStyle, PrerenderConfig
 from ..utils import hex_to_rgb, is_windows, safe_run_subprocess
 from .base import BasePrerenderer
 
@@ -49,9 +49,7 @@ class MermaidRenderer(BasePrerenderer):
         self._style = style
         self._renderer = self._detect_renderer()
 
-    def _render(
-        self, content: str, output_path: Path, *args: str
-    ) -> tuple[int, int] | None:
+    def _render(self, content: str, output_path: Path, *args: str) -> tuple[int, int] | None:
         """执行Mermaid渲染，返回图片尺寸。"""
         if self._renderer == "mmdc":
             return self._render_with_mmdc(content, output_path)
@@ -74,7 +72,8 @@ class MermaidRenderer(BasePrerenderer):
                 return "mmdc"
 
         try:
-            from playwright import sync_playwright
+            from playwright import sync_playwright  # noqa: F401  检测可用性
+
             return "playwright"
         except ImportError:
             pass
@@ -110,17 +109,24 @@ class MermaidRenderer(BasePrerenderer):
         if not mmdc_cmd:
             return None
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".mmd", delete=False, encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".mmd", delete=False, encoding="utf-8"
+        ) as f:
             f.write(mermaid_code)
             input_file = f.name
 
         try:
             args = mmdc_cmd + [
-                "-i", input_file,
-                "-o", str(output_path),
-                "-t", self._style.theme,
-                "-b", self._style.background_color,
-                "--scale", str(self._style.scale),
+                "-i",
+                input_file,
+                "-o",
+                str(output_path),
+                "-t",
+                self._style.theme,
+                "-b",
+                self._style.background_color,
+                "--scale",
+                str(self._style.scale),
             ]
 
             result = safe_run_subprocess(
@@ -137,7 +143,9 @@ class MermaidRenderer(BasePrerenderer):
         finally:
             Path(input_file).unlink(missing_ok=True)
 
-    def _render_with_playwright(self, mermaid_code: str, output_path: Path) -> tuple[int, int] | None:
+    def _render_with_playwright(
+        self, mermaid_code: str, output_path: Path
+    ) -> tuple[int, int] | None:
         """使用playwright渲染。"""
         try:
             from playwright.sync_api import sync_playwright
@@ -181,7 +189,6 @@ class MermaidRenderer(BasePrerenderer):
     def _fallback_render(self, mermaid_code: str, output_path: Path) -> tuple[int, int] | None:
         """回退渲染：显示代码文本。"""
         lines = mermaid_code.split("\n")
-        font_size = 12
         line_height = 18
         padding = 20
 

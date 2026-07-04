@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from ..core.models import PrerenderResult, PrerenderConfig
+from ..core.models import PrerenderConfig, PrerenderResult
 from ..utils import compute_content_hash, ensure_dir
 
 logger = logging.getLogger(__name__)

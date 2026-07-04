@@ -97,7 +97,7 @@ def load_yaml_file(path: Path, label: str = "YAML文件") -> dict[str, Any]:
         raise FileNotFoundError(f"{label}未找到: {path}")
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
     except yaml.YAMLError as e:
         raise InvalidConfigError(f"解析{label}失败: {e}") from e

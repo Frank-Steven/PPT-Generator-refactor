@@ -12,11 +12,11 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from returns.maybe import Maybe, Nothing
 
-from ..core.models import LayoutSpec, SlideSpec, LayoutConfig
+from ..core.models import LayoutConfig, LayoutSpec, SlideSpec
 
 
 class LayoutMatcher:
@@ -29,7 +29,8 @@ class LayoutMatcher:
     def __init__(
         self,
         layout_config: LayoutConfig | None = None,
-        strategy: Callable[[SlideSpec, list[LayoutSpec], LayoutConfig | None], Maybe[LayoutSpec]] | None = None,
+        strategy: Callable[[SlideSpec, list[LayoutSpec], LayoutConfig | None], Maybe[LayoutSpec]]
+        | None = None,
     ) -> None:
         """初始化布局匹配器。
 
@@ -125,16 +126,24 @@ class LayoutMatcher:
                 default=None,
             )
 
-            if best_match is not None and self._calculate_keyword_score(hint_lower, best_match.keywords) > 0:
-                layout = next((l for l in layouts if l.name == best_match.name), None)
+            if (
+                best_match is not None
+                and self._calculate_keyword_score(hint_lower, best_match.keywords) > 0
+            ):
+                layout = next(
+                    (layout for layout in layouts if layout.name == best_match.name), None
+                )
                 if layout is not None:
                     return Maybe.from_value(layout)
 
         return Maybe.from_optional(
             next(
-                (layout for keyword in hint_lower.split()
-                 for layout in layouts
-                 if keyword in layout.name.lower()),
+                (
+                    layout
+                    for keyword in hint_lower.split()
+                    for layout in layouts
+                    if keyword in layout.name.lower()
+                ),
                 None,
             )
         )
@@ -170,18 +179,18 @@ class LayoutMatcher:
         """
         if layout_config is not None:
             default_name = layout_config.get_default_layout_name("default")
-            layout = next((l for l in layouts if l.name == default_name), None)
+            layout = next((layout for layout in layouts if layout.name == default_name), None)
             if layout is not None:
                 return Maybe.from_value(layout)
 
         # 启发式回退：按优先级查找
         predicates: list[Callable[[LayoutSpec], bool]] = [
-            lambda l: "title" in l.name.lower() and "content" in l.name.lower(),
-            lambda l: "content" in l.name.lower(),
+            lambda layout: "title" in layout.name.lower() and "content" in layout.name.lower(),
+            lambda layout: "content" in layout.name.lower(),
         ]
 
         for predicate in predicates:
-            layout = next((l for l in layouts if predicate(l)), None)
+            layout = next((layout for layout in layouts if predicate(layout)), None)
             if layout is not None:
                 return Maybe.from_value(layout)
 
@@ -226,6 +235,7 @@ def create_matcher_with_rules(
     返回:
         LayoutMatcher实例。
     """
+
     def custom_strategy(
         slide: SlideSpec,
         layouts: list[LayoutSpec],

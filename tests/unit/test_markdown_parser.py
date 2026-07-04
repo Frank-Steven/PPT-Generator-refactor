@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from ppt_generator.parsers import MarkdownParser
 from ppt_generator.core.models import SlideItemType
+from ppt_generator.parsers import MarkdownParser
 
 
 class TestMarkdownParser:

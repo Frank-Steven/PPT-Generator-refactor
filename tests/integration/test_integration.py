@@ -8,8 +8,14 @@ from pathlib import Path
 import pytest
 from returns.result import Failure, Success
 
-from ppt_generator import PPTGenerator, MarkdownParseError, generate_ppt, parse_markdown, validate_slides
-from ppt_generator.core.models import SlideSpec, SlideItem, SlideItemType
+from ppt_generator import (
+    MarkdownParseError,
+    PPTGenerator,
+    generate_ppt,
+    parse_markdown,
+    validate_slides,
+)
+from ppt_generator.core.models import SlideItem, SlideItemType, SlideSpec
 
 
 def test_generator_with_error_handling(tmp_path: Path) -> None:

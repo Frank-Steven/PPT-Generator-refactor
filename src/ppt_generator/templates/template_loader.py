@@ -6,11 +6,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from pptx import Presentation
 
-from ..core.exceptions import TemplateLoadError, MissingFileError
+from ..core.exceptions import MissingFileError, TemplateLoadError
 from ..core.models import LayoutSpec, PlaceholderSpec
 from ..utils import placeholder_type_to_str
 
@@ -32,10 +31,10 @@ class TemplateLoader:
             TemplateLoadError: 如果模板无法加载。
         """
         self._path = Path(template_path)
-        
+
         if not self._path.exists():
             raise MissingFileError(f"模板文件不存在: {self._path}")
-        
+
         try:
             self._presentation = Presentation(str(self._path))
         except Exception as exc:
@@ -69,19 +68,23 @@ class TemplateLoader:
         for layout in self._presentation.slide_layouts:
             placeholders = []
             for ph in layout.placeholders:
-                placeholders.append(PlaceholderSpec(
-                    name=ph.name,
-                    placeholder_type=placeholder_type_to_str(ph.placeholder_format.type),
-                    index=ph.placeholder_format.idx,
-                    shape_id=ph.shape_id,
-                ))
-            layouts.append(LayoutSpec(
-                name=layout.name,
-                placeholders=placeholders,
-            ))
+                placeholders.append(
+                    PlaceholderSpec(
+                        name=ph.name,
+                        placeholder_type=placeholder_type_to_str(ph.placeholder_format.type),
+                        index=ph.placeholder_format.idx,
+                        shape_id=ph.shape_id,
+                    )
+                )
+            layouts.append(
+                LayoutSpec(
+                    name=layout.name,
+                    placeholders=placeholders,
+                )
+            )
         return layouts
 
-    def get_layout_by_name(self, name: str) -> Optional[LayoutSpec]:
+    def get_layout_by_name(self, name: str) -> LayoutSpec | None:
         """根据名称获取布局。
 
         参数:
@@ -106,11 +109,7 @@ class TemplateLoader:
             "Title and Content",
             "Section Header",
         ]
-        
+
         layout_names = [layout.name for layout in self.list_layouts()]
-        
-        for required in required_layouts:
-            if required not in layout_names:
-                return False
-        
-        return True
+
+        return all(required in layout_names for required in required_layouts)

@@ -6,7 +6,6 @@
 from .layout_matcher import LayoutMatcher, create_matcher_with_rules
 from .pagination import PaginationConfig, paginate_slide, paginate_slides
 
-
 __all__ = [
     "LayoutMatcher",
     "create_matcher_with_rules",

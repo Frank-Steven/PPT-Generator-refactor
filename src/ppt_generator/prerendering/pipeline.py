@@ -25,7 +25,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from ..core.models import (
     PrerenderConfig,
@@ -36,8 +37,8 @@ from ..core.models import (
     StyleConfig,
 )
 from .code_highlight import CodeHighlighter
-from .mermaid_renderer import MermaidRenderer
 from .latex_renderer import LatexRenderer
+from .mermaid_renderer import MermaidRenderer
 
 logger = logging.getLogger(__name__)
 
@@ -141,13 +142,18 @@ def _prerender_item(
 
         if language == "mermaid" and "mermaid" in renderers:
             return _try_prerender(
-                item, renderers["mermaid"], item.content,
+                item,
+                renderers["mermaid"],
+                item.content,
                 label="Mermaid图表",
             )
 
         if "code" in renderers:
             return _try_prerender(
-                item, renderers["code"], item.content, item.meta.get("language", ""),
+                item,
+                renderers["code"],
+                item.content,
+                item.meta.get("language", ""),
                 label=f"代码块（语言: {item.meta.get('language', '')}）",
             )
 
@@ -229,8 +235,15 @@ def _prerender_paragraph(
 def _detect_mermaid_content(content: str) -> str | None:
     """检测内容是否为Mermaid图表，返回图表代码或None。"""
     mermaid_patterns = [
-        "graph", "flowchart", "sequenceDiagram", "classDiagram",
-        "stateDiagram", "gantt", "pie", "erDiagram", "journey",
+        "graph",
+        "flowchart",
+        "sequenceDiagram",
+        "classDiagram",
+        "stateDiagram",
+        "gantt",
+        "pie",
+        "erDiagram",
+        "journey",
     ]
 
     lines = content.strip().split("\n")
@@ -265,6 +278,7 @@ def clear_cache(config: PrerenderConfig) -> None:
     cache_dir = config.cache_dir
     if cache_dir.exists():
         import shutil
+
         shutil.rmtree(cache_dir)
         logger.info(f"预渲染缓存已清除: {cache_dir}")
 

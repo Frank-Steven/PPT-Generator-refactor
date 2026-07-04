@@ -3,53 +3,52 @@
 提供PPT生成器的核心数据模型、异常定义和生成器主类。
 """
 
+from ..matching import PaginationConfig
 from .exceptions import (
-    PPTGeneratorError,
-    MarkdownParseError,
-    TemplateLoadError,
-    SlideRenderingError,
-    LayoutMatchError,
-    InvalidConfigError,
     EmptySlideError,
+    InvalidConfigError,
+    LayoutMatchError,
+    MarkdownParseError,
     MissingFileError,
+    PPTGeneratorError,
+    SlideRenderingError,
+    TemplateLoadError,
+)
+from .generator import (
+    PPTGenerator,
+    build_slide_specs,
+    generate_ppt,
+    generate_ppt_with_theme,
+    match_layouts,
+    parse_markdown,
+    render_presentation,
+    validate_slides,
 )
 from .models import (
+    CodeStyle,
+    LatexStyle,
+    LayoutAutoApply,
+    LayoutConfig,
+    LayoutDef,
+    LayoutDefaults,
+    LayoutGroupDef,
+    LayoutPlaceholderDef,
+    LayoutSpec,
+    MermaidStyle,
+    PlaceholderSpec,
+    PrerenderConfig,
+    PrerenderResult,
+    RichRun,
+    RunOverrides,
+    RunStyle,
     SlideItem,
     SlideItemType,
     SlideSpec,
-    LayoutSpec,
-    PlaceholderSpec,
+    StyleConfig,
+    TableStyle,
     ThemePack,
     ThemePackManifest,
-    StyleConfig,
-    CodeStyle,
-    MermaidStyle,
-    LatexStyle,
-    TableStyle,
-    RunStyle,
-    RunOverrides,
-    LayoutConfig,
-    LayoutDef,
-    LayoutGroupDef,
-    LayoutDefaults,
-    LayoutPlaceholderDef,
-    LayoutAutoApply,
-    RichRun,
-    PrerenderResult,
-    PrerenderConfig,
 )
-from ..matching import PaginationConfig
-from .generator import (
-    PPTGenerator,
-    generate_ppt,
-    generate_ppt_with_theme,
-    parse_markdown,
-    validate_slides,
-    match_layouts,
-    build_slide_specs,
-    render_presentation,
-)
-
 
 __all__ = [
     "PPTGenerator",

@@ -4,10 +4,9 @@
 """
 
 from .theme_pack import (
-    load_theme_pack,
     list_available_themes,
+    load_theme_pack,
 )
-
 
 __all__ = [
     "load_theme_pack",

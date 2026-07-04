@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any
 
 from ..core.models import (
     LayoutSpec,
@@ -24,7 +23,6 @@ from ..core.models import (
     SlideSpec,
     StyleConfig,
 )
-from ..utils import is_windows
 
 logger = logging.getLogger(__name__)
 
@@ -390,10 +388,7 @@ def paginate_slide(
         item_h = _estimate_item_height(item, config, style_config, container_w)
 
         fits_current = current_height + item_h <= available_h
-        at_max = (
-            config.max_items_per_page > 0
-            and len(current_page) >= config.max_items_per_page
-        )
+        at_max = config.max_items_per_page > 0 and len(current_page) >= config.max_items_per_page
 
         if current_page and (not fits_current or at_max):
             pages.append(current_page)

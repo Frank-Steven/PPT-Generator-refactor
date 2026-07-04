@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ppt_generator.core.exceptions import TemplateLoadError, MissingFileError
+from ppt_generator.core.exceptions import MissingFileError, TemplateLoadError
 from ppt_generator.templates import TemplateLoader
 
 
@@ -31,7 +31,7 @@ class TestTemplateLoader:
     def test_layout_has_placeholders(self, template_loader: TemplateLoader) -> None:
         """测试布局包含占位符信息。"""
         layouts = template_loader.list_layouts()
-        
+
         for layout in layouts:
             for placeholder in layout.placeholders:
                 assert placeholder.name
@@ -65,7 +65,7 @@ class TestTemplateLoader:
     def test_placeholder_types(self, template_loader: TemplateLoader) -> None:
         """测试占位符类型。"""
         layouts = template_loader.list_layouts()
-        
+
         for layout in layouts:
             for placeholder in layout.placeholders:
                 assert isinstance(placeholder.placeholder_type, str)
