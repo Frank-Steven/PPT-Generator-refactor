@@ -23,16 +23,15 @@
     - dpi: 输出图片分辨率
 """
 
+from ..core.models import PrerenderConfig
 from .base import BasePrerenderer
-from .pipeline import (
-    prerender_slides,
-    prerender_slide_items,
-    PrerenderConfig,
-)
 from .code_highlight import CodeHighlighter
-from .mermaid_renderer import MermaidRenderer
 from .latex_renderer import LatexRenderer
-
+from .mermaid_renderer import MermaidRenderer
+from .pipeline import (
+    prerender_slide_items,
+    prerender_slides,
+)
 
 __all__ = [
     "prerender_slides",

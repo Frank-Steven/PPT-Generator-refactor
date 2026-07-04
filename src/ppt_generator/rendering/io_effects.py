@@ -11,9 +11,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from PIL import Image as PILImage
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import PP_PLACEHOLDER_TYPE
@@ -24,16 +26,14 @@ from returns.result import Failure, Result, Success
 
 from ..core.exceptions import TemplateLoadError
 from ..core.models import (
+    LayoutSpec,
+    PrerenderResult,
+    RichRun,
+    RunStyle,
     SlideItem,
     SlideItemType,
-    LayoutSpec,
-    RichRun,
     StyleConfig,
-    RunStyle,
-    PrerenderResult,
 )
-from PIL import Image as PILImage
-
 from ..templates import TemplateLoader
 from ..utils import ensure_dir, hex_to_rgb
 
@@ -118,8 +118,7 @@ def render_title(slide: Slide, title: str) -> None:
     title_types = (PP_PLACEHOLDER_TYPE.TITLE, PP_PLACEHOLDER_TYPE.CENTER_TITLE)
 
     shape = next(
-        (s for s in slide.shapes
-         if s.is_placeholder and s.placeholder_format.type in title_types),
+        (s for s in slide.shapes if s.is_placeholder and s.placeholder_format.type in title_types),
         None,
     )
     if shape is not None:
@@ -127,10 +126,13 @@ def render_title(slide: Slide, title: str) -> None:
         return
 
     shape = next(
-        (s for s in slide.shapes
-         if s.is_placeholder
-         and "title" in s.name.lower()
-         and s.placeholder_format.type != PP_PLACEHOLDER_TYPE.SUBTITLE),
+        (
+            s
+            for s in slide.shapes
+            if s.is_placeholder
+            and "title" in s.name.lower()
+            and s.placeholder_format.type != PP_PLACEHOLDER_TYPE.SUBTITLE
+        ),
         None,
     )
     if shape is not None:
@@ -151,10 +153,11 @@ def _find_first_placeholder(slide: Slide, ph_types: tuple[PP_PLACEHOLDER_TYPE, .
     """
     for ph_type in ph_types:
         shape = next(
-            (s for s in slide.shapes
-             if s.is_placeholder
-             and s.placeholder_format.type == ph_type
-             and s.has_text_frame),
+            (
+                s
+                for s in slide.shapes
+                if s.is_placeholder and s.placeholder_format.type == ph_type and s.has_text_frame
+            ),
             None,
         )
         if shape is not None:
@@ -173,11 +176,14 @@ def get_body_text_frame(slide: Slide) -> Any | None:
     返回:
         TextFrame对象，如果找不到则返回None。
     """
-    return _find_first_placeholder(slide, (
-        PP_PLACEHOLDER_TYPE.BODY,
-        PP_PLACEHOLDER_TYPE.OBJECT,
-        PP_PLACEHOLDER_TYPE.SUBTITLE,
-    ))
+    return _find_first_placeholder(
+        slide,
+        (
+            PP_PLACEHOLDER_TYPE.BODY,
+            PP_PLACEHOLDER_TYPE.OBJECT,
+            PP_PLACEHOLDER_TYPE.SUBTITLE,
+        ),
+    )
 
 
 def set_autofit(text_frame: Any) -> None:
@@ -229,32 +235,32 @@ def render_rich_paragraph(
     text_frame = get_body_text_frame(slide)
     if text_frame is None:
         return
-    
+
     set_autofit(text_frame)
-    
+
     if not append or not text_frame.paragraphs:
         text_frame.clear()
-    
+
     p = text_frame.add_paragraph()
-    
+
     for run_data in runs:
         run = p.add_run()
         run.text = run_data.text
-        
+
         if run_data.bold:
             run.bold = True
             apply_run_style(run, style_config.run_overrides.bold)
-        
+
         if run_data.italic:
             run.italic = True
             apply_run_style(run, style_config.run_overrides.italic)
-        
+
         if run_data.code:
             apply_run_style(run, style_config.run_overrides.code)
-        
+
         if run_data.strikethrough:
             run.font.strikethrough = True
-        
+
         if run_data.link:
             apply_run_style(run, style_config.run_overrides.link)
 
@@ -270,12 +276,12 @@ def render_paragraph(slide: Slide, content: str, append: bool = True) -> None:
     text_frame = get_body_text_frame(slide)
     if text_frame is None:
         return
-    
+
     set_autofit(text_frame)
-    
+
     if not append or not text_frame.paragraphs:
         text_frame.clear()
-    
+
     p = text_frame.add_paragraph()
     p.text = content
 
@@ -291,12 +297,12 @@ def render_list(slide: Slide, content: str, level: int = 1) -> None:
     text_frame = get_body_text_frame(slide)
     if text_frame is None:
         return
-    
+
     set_autofit(text_frame)
-    
+
     if not text_frame.paragraphs:
         text_frame.clear()
-    
+
     p = text_frame.add_paragraph()
     p.text = content
     p.level = level
@@ -319,28 +325,28 @@ def render_rich_list(
     text_frame = get_body_text_frame(slide)
     if text_frame is None:
         return
-    
+
     set_autofit(text_frame)
-    
+
     if not text_frame.paragraphs:
         text_frame.clear()
-    
+
     for item_runs in items:
         p = text_frame.add_paragraph()
         p.level = level
-        
+
         for run_data in item_runs:
             run = p.add_run()
             run.text = run_data.text
-            
+
             if run_data.bold:
                 run.bold = True
                 apply_run_style(run, style_config.run_overrides.bold)
-            
+
             if run_data.italic:
                 run.italic = True
                 apply_run_style(run, style_config.run_overrides.italic)
-            
+
             if run_data.code:
                 apply_run_style(run, style_config.run_overrides.code)
 
@@ -390,7 +396,7 @@ def render_default_item(slide: Slide, item: SlideItem, style_config: StyleConfig
         style_config: 样式配置。
     """
     runs = item.meta.get("runs", [])
-    
+
     if runs:
         render_rich_paragraph(slide, runs, style_config)
     else:
@@ -409,7 +415,7 @@ def render_image(slide: Slide, item: SlideItem, style_config: StyleConfig | None
     if isinstance(prerender, PrerenderResult):
         _insert_image_from_path(slide, prerender.image_path)
         return
-    
+
     src = item.meta.get("src", "")
     if src and Path(src).exists():
         _insert_image_from_path(slide, Path(src))
@@ -427,7 +433,8 @@ def _get_image_size(image_path: Path) -> tuple[int, int]:
         (宽度, 高度) 像素元组。
     """
     with PILImage.open(image_path) as img:
-        return img.size
+        width, height = img.size
+        return width, height
 
 
 def _calculate_fit_dimensions(

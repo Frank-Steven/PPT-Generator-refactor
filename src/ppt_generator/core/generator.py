@@ -16,18 +16,16 @@ IO边界:
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from pptx import Presentation
 from returns.pipeline import flow
 from returns.result import Failure, Result, Success
 
-from .exceptions import (
-    EmptySlideError,
-    MarkdownParseError,
-    TemplateLoadError,
-)
+from ..matching import LayoutMatcher, PaginationConfig, paginate_slides
+from ..parsers import MarkdownParser
+from ..prerendering import prerender_slides
 from ..rendering import (
     add_slide,
     extract_layouts,
@@ -42,10 +40,10 @@ from ..rendering import (
     render_title,
     save_presentation,
 )
-from ..matching import LayoutMatcher
-from ..matching import PaginationConfig, paginate_slides
-from ..parsers import MarkdownParser
-from ..prerendering import prerender_slides
+from .exceptions import (
+    EmptySlideError,
+    MarkdownParseError,
+)
 from .models import (
     LayoutSpec,
     PrerenderConfig,
@@ -56,12 +54,13 @@ from .models import (
     StyleConfig,
     ThemePack,
 )
-from ..themes import load_theme_pack
 
 logger = logging.getLogger(__name__)
 
 
-def render_paragraph_with_style(slide: Presentation, item: SlideItem, style_config: StyleConfig) -> None:
+def render_paragraph_with_style(
+    slide: Presentation, item: SlideItem, style_config: StyleConfig
+) -> None:
     """渲染段落内容项（带样式）。"""
     runs = item.meta.get("runs", [])
     if runs:
@@ -117,7 +116,7 @@ def parse_markdown(
     """
     if not markdown_text.strip():
         return Failure(MarkdownParseError("Markdown源内容不能为空"))
-    
+
     try:
         parse_fn = parser or MarkdownParser(markdown_text)
         return Success(parse_fn.parse())
@@ -136,11 +135,11 @@ def validate_slides(slides: list[SlideSpec]) -> Result[list[SlideSpec], EmptySli
     """
     if not slides:
         return Failure(EmptySlideError("未从Markdown中解析到任何幻灯片"))
-    
+
     for idx, slide in enumerate(slides):
         if not slide.title.strip():
             logger.warning(f"幻灯片 #{idx + 1} 没有标题")
-    
+
     return Success(slides)
 
 
@@ -162,13 +161,13 @@ def match_layouts(
         (SlideSpec, LayoutSpec)元组列表。
     """
     match_fn = matcher or LayoutMatcher()
-    
+
     def match_slide(slide: SlideSpec) -> tuple[SlideSpec, LayoutSpec]:
         matched = match_fn.select_layout(slide, layouts)
         default = layouts[0] if layouts else LayoutSpec(name="Default", placeholders=[])
         layout = matched.value_or(default)
         return (slide, layout)
-    
+
     return [match_slide(slide) for slide in slides]
 
 
@@ -203,9 +202,13 @@ def build_slide_specs(
         markdown_text,
         lambda text: parse_markdown(text, parser),
         lambda result: result.bind(validate_slides),
-        lambda result: result.map(lambda slides: _prerender_if_enabled(slides, config, prerender_config)),
+        lambda result: result.map(
+            lambda slides: _prerender_if_enabled(slides, config, prerender_config)
+        ),
         lambda result: result.map(lambda slides: match_layouts(slides, layouts, config, matcher)),
-        lambda result: result.map(lambda pairs: _paginate_if_enabled(pairs, config, pagination_config)),
+        lambda result: result.map(
+            lambda pairs: _paginate_if_enabled(pairs, config, pagination_config)
+        ),
     )
 
 
@@ -269,10 +272,10 @@ def render_slide(
     """
     layout_index = find_layout_index(presentation, layout_spec.name).value_or(0)
     slide = add_slide(presentation, layout_index)
-    
+
     slide_title = slide_spec.title or title
     render_title(slide, slide_title)
-    
+
     for item in slide_spec.items:
         render_slide_item(slide, item, style_config, RENDERERS)
 
@@ -292,7 +295,7 @@ def render_presentation(
         title: 演示文稿标题。
     """
     presentation.core_properties.title = title
-    
+
     for slide_spec, layout_spec in specs:
         render_slide(presentation, slide_spec, layout_spec, style_config, title)
 
@@ -393,8 +396,16 @@ def _generate(
         extract_layouts,
         lambda result: result.bind(
             lambda layouts: _build_and_render(
-                layouts, markdown_text, template_path, output_path, title,
-                style_config, parser, matcher, prerender_config, pagination_config
+                layouts,
+                markdown_text,
+                template_path,
+                output_path,
+                title,
+                style_config,
+                parser,
+                matcher,
+                prerender_config,
+                pagination_config,
             )
         ),
     )
@@ -433,13 +444,14 @@ def _build_and_render(
         Success(Path)如果生成成功，Failure(Exception)否则。
     """
     return build_slide_specs(
-        markdown_text, layouts, style_config,
-        parser=parser, matcher=matcher,
+        markdown_text,
+        layouts,
+        style_config,
+        parser=parser,
+        matcher=matcher,
         prerender_config=prerender_config,
         pagination_config=pagination_config,
-    ).bind(lambda specs: _render_and_save(
-        specs, template_path, output_path, style_config, title
-    ))
+    ).bind(lambda specs: _render_and_save(specs, template_path, output_path, style_config, title))
 
 
 def _render_and_save(
@@ -465,18 +477,23 @@ def _render_and_save(
     """
     return (
         load_presentation(template_path)
-        .bind(lambda presentation: (
-            _try_render(presentation, specs, style_config, title)
-            .map(lambda _: presentation)
-        ))
-        .bind(lambda presentation: (
-            save_presentation(presentation, output_path)
-            .map(lambda _: (
-                logger.info(f"演示文稿已成功生成: {output_path}"),
-                output_path,
-            )[1])
-        ))
+        .bind(
+            lambda presentation: _try_render(presentation, specs, style_config, title).map(
+                lambda _: presentation
+            )
+        )
+        .bind(
+            lambda presentation: save_presentation(presentation, output_path).map(
+                lambda _: _log_success(output_path)
+            )
+        )
     )
+
+
+def _log_success(output_path: Path) -> Path:
+    """记录成功日志并返回路径，供 Result.map 链式调用使用。"""
+    logger.info(f"演示文稿已成功生成: {output_path}")
+    return output_path
 
 
 def _try_render(
@@ -576,6 +593,10 @@ class PPTGenerator:
     def metadata_json(self) -> bytes:
         """将演示文稿元数据导出为JSON。"""
         import orjson
-        return orjson.dumps({
-            "title": self.title,
-        })
+
+        data: bytes = orjson.dumps(
+            {
+                "title": self.title,
+            }
+        )
+        return data

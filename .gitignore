@@ -11,3 +11,11 @@ wheels/
 
 # Cache directories
 .cache/
+
+# Office 临时锁文件（Word/PowerPoint 编辑时生成）
+~$*
+
+# 测试覆盖率产物
+.coverage
+.coverage.*
+htmlcov/

@@ -22,7 +22,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from ..core.models import PrerenderResult, PrerenderConfig, CodeStyle
+from ..core.models import CodeStyle, PrerenderConfig
 from ..utils import hex_to_rgb
 from .base import BasePrerenderer
 
@@ -40,21 +40,7 @@ class CodeHighlighter(BasePrerenderer):
         super().__init__(config, "code")
         self._style = style
 
-    def prerender(self, code: str, language: str = "") -> PrerenderResult | None:
-        """预渲染代码块。
-
-        参数:
-            code: 代码内容。
-            language: 编程语言。
-
-        返回:
-            PrerenderResult如果成功，None如果失败。
-        """
-        return super().prerender(code, language)
-
-    def _render(
-        self, content: str, output_path: Path, *args: str
-    ) -> tuple[int, int] | None:
+    def _render(self, content: str, output_path: Path, *args: str) -> tuple[int, int] | None:
         """执行代码渲染，返回图片尺寸。"""
         language = args[0] if args else ""
         image = self._render_code_to_image(content, language)
@@ -65,14 +51,15 @@ class CodeHighlighter(BasePrerenderer):
         """将代码渲染为图片。"""
         try:
             from pygments import highlight
-            from pygments.lexers import get_lexer_by_name, guess_lexer
             from pygments.formatters import ImageFormatter
+            from pygments.lexers import get_lexer_by_name, guess_lexer
             from pygments.styles import get_style_by_name
 
             try:
                 lexer = get_lexer_by_name(language) if language else guess_lexer(code)
             except Exception:
                 from pygments.lexers import TextLexer
+
                 lexer = TextLexer()
 
             style = get_style_by_name(self._style.theme)

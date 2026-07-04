@@ -11,18 +11,18 @@
 """
 
 from pathlib import Path
+
 from pptx import Presentation
-from pptx.util import Inches
 
 
 def create_rich_template(output_path: Path) -> None:
     """创建包含所有标准布局的PPT模板。
-    
+
     参数:
         output_path: 模板文件输出路径。
     """
     prs = Presentation()
-    
+
     layout_info = []
     for i, layout in enumerate(prs.slide_layouts):
         placeholders = []
@@ -30,16 +30,12 @@ def create_rich_template(output_path: Path) -> None:
             ph_type = ph.placeholder_format.type
             ph_name = ph.name
             placeholders.append(f"{ph_name} ({ph_type})")
-        
-        layout_info.append({
-            "index": i,
-            "name": layout.name,
-            "placeholders": placeholders
-        })
-    
+
+        layout_info.append({"index": i, "name": layout.name, "placeholders": placeholders})
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(output_path))
-    
+
     print("模板已创建:")
     print("=" * 60)
     for info in layout_info:
@@ -53,7 +49,7 @@ def main() -> None:
     scripts_dir = Path(__file__).parent
     examples_dir = scripts_dir.parent
     template_path = examples_dir / "templates" / "template.pptx"
-    
+
     create_rich_template(template_path)
 
 

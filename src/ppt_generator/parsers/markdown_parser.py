@@ -24,14 +24,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import reduce
-from typing import Any, Callable
 
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
 from returns.maybe import Maybe
 
-from ..core.models import SlideItem, SlideItemType, SlideSpec, RichRun
+from ..core.models import RichRun, SlideItem, SlideItemType, SlideSpec
 
 
 def _token_text(token: Token) -> str:
@@ -45,9 +45,7 @@ def _token_text(token: Token) -> str:
     """
     if token.type == "text":
         return token.content
-    return "".join(
-        child.content for child in token.children or [] if child.type == "text"
-    )
+    return "".join(child.content for child in token.children or [] if child.type == "text")
 
 
 def _update_or_create(
@@ -67,9 +65,7 @@ def _update_or_create(
     返回:
         包含更新后或新创建幻灯片的 Maybe 值。
     """
-    return Maybe.from_value(
-        slide_maybe.map(updater).or_else_call(fallback_factory)
-    )
+    return Maybe.from_value(slide_maybe.map(updater).or_else_call(fallback_factory))
 
 
 def _parse_inline_runs(token: Token) -> list[RichRun]:
@@ -82,20 +78,20 @@ def _parse_inline_runs(token: Token) -> list[RichRun]:
         RichRun列表，包含语义格式信息。
     """
     runs: list[RichRun] = []
-    
+
     if not token.children:
         if token.type == "inline":
             return [RichRun(text=token.content)]
         return [RichRun(text=_token_text(token))]
-    
+
     for child in token.children:
         text = child.content
         bold = False
         italic = False
         code = False
-        link = None
+        link: str | None = None
         strikethrough = False
-        
+
         if child.type == "strong_open":
             bold = True
         elif child.type == "em_open":
@@ -105,10 +101,20 @@ def _parse_inline_runs(token: Token) -> list[RichRun]:
         elif child.type == "s_open":
             strikethrough = True
         elif child.type == "link_open":
-            link = child.attrs.get("href") if child.attrs else None
+            href = child.attrs.get("href") if child.attrs else None
+            link = str(href) if href is not None else None
         elif child.type == "text":
-            runs.append(RichRun(text=text, bold=bold, italic=italic, code=code, link=link, strikethrough=strikethrough))
-        
+            runs.append(
+                RichRun(
+                    text=text,
+                    bold=bold,
+                    italic=italic,
+                    code=code,
+                    link=link,
+                    strikethrough=strikethrough,
+                )
+            )
+
         if child.children:
             nested_runs = _parse_inline_runs(child)
             for nested_run in nested_runs:
@@ -121,7 +127,7 @@ def _parse_inline_runs(token: Token) -> list[RichRun]:
                     strikethrough=nested_run.strikethrough or strikethrough,
                 )
                 runs.append(merged_run)
-    
+
     return runs
 
 
@@ -267,10 +273,11 @@ def _parse_layout_hint_from_comment(content: str) -> str | None:
         布局提示字符串，如果没有找到则返回None。
     """
     import re
-    match = re.search(r'layout:\s*([^\s<][^<]*?)', content, re.IGNORECASE)
+
+    match = re.search(r"layout:\s*([^\s<][^<]*?)", content, re.IGNORECASE)
     if match:
         hint = match.group(1).strip()
-        hint = re.sub(r'[-]+$', '', hint).strip()
+        hint = re.sub(r"[-]+$", "", hint).strip()
         return hint
     return None
 
@@ -300,28 +307,22 @@ def _infer_layout_hint(slide: SlideSpec, is_first: bool) -> str:
     """
     if is_first:
         return "Title Slide"
-    
+
     if not slide.items:
         return "Section Header"
-    
+
     has_list = any(item.type == SlideItemType.LIST for item in slide.items)
     has_paragraph = any(item.type == SlideItemType.PARAGRAPH for item in slide.items)
     has_code = any(item.type == SlideItemType.CODE for item in slide.items)
     has_table = any(item.type == SlideItemType.TABLE for item in slide.items)
     has_image = any(item.type == SlideItemType.IMAGE for item in slide.items)
     item_count = len(slide.items)
-    
+
     if item_count >= 6 or has_table or has_image:
         return "Content with Caption"
-    elif has_list and has_paragraph:
+    elif has_list and has_paragraph or has_list or has_paragraph or has_code:
         return "Title and Content"
-    elif has_list:
-        return "Title and Content"
-    elif has_paragraph:
-        return "Title and Content"
-    elif has_code:
-        return "Title and Content"
-    
+
     return "Title and Content"
 
 
@@ -342,7 +343,8 @@ def _add_paragraph_item(slide: SlideSpec, content: str, runs: list[RichRun]) -> 
         return SlideSpec(title=content, items=slide.items, layout_hint=slide.layout_hint)
     return SlideSpec(
         title=slide.title,
-        items=slide.items + [SlideItem(type=SlideItemType.PARAGRAPH, content=content, meta={"runs": runs})],
+        items=slide.items
+        + [SlideItem(type=SlideItemType.PARAGRAPH, content=content, meta={"runs": runs})],
         layout_hint=slide.layout_hint,
     )
 
@@ -360,7 +362,8 @@ def _add_list_item(slide: SlideSpec, content: str, runs: list[RichRun]) -> Slide
     """
     return SlideSpec(
         title=slide.title,
-        items=slide.items + [SlideItem(type=SlideItemType.LIST, content=content, meta={"runs": runs})],
+        items=slide.items
+        + [SlideItem(type=SlideItemType.LIST, content=content, meta={"runs": runs})],
         layout_hint=slide.layout_hint,
     )
 
@@ -378,7 +381,8 @@ def _add_code_block_item(slide: SlideSpec, content: str, language: str) -> Slide
     """
     return SlideSpec(
         title=slide.title,
-        items=slide.items + [SlideItem(type=SlideItemType.CODE, content=content, meta={"language": language})],
+        items=slide.items
+        + [SlideItem(type=SlideItemType.CODE, content=content, meta={"language": language})],
         layout_hint=slide.layout_hint,
     )
 
@@ -397,7 +401,8 @@ def _add_table_item(slide: SlideSpec, content: str, rows: int, cols: int) -> Sli
     """
     return SlideSpec(
         title=slide.title,
-        items=slide.items + [SlideItem(type=SlideItemType.TABLE, content=content, meta={"rows": rows, "cols": cols})],
+        items=slide.items
+        + [SlideItem(type=SlideItemType.TABLE, content=content, meta={"rows": rows, "cols": cols})],
         layout_hint=slide.layout_hint,
     )
 
@@ -416,7 +421,8 @@ def _add_image_item(slide: SlideSpec, content: str, src: str, alt: str) -> Slide
     """
     return SlideSpec(
         title=slide.title,
-        items=slide.items + [SlideItem(type=SlideItemType.IMAGE, content=content, meta={"src": src, "alt": alt})],
+        items=slide.items
+        + [SlideItem(type=SlideItemType.IMAGE, content=content, meta={"src": src, "alt": alt})],
         layout_hint=slide.layout_hint,
     )
 
@@ -435,28 +441,28 @@ def _parse_table(tokens: list[Token], start_idx: int) -> tuple[str, int, int, in
     rows = 0
     cols = 0
     idx = start_idx
-    
+
     while idx < len(tokens):
         token = tokens[idx]
         if token.type == "table_close":
             break
-        
+
         if token.type == "tr_open":
             rows += 1
-        
+
         if token.type == "td_open":
             cols += 1
-        
+
         if token.type == "inline":
             content += _token_text(token) + "|"
-        
+
         if token.type == "tr_close":
             content = content.rstrip("|") + "\n"
-        
+
         idx += 1
-    
+
     cols = max(cols // rows, 1) if rows > 0 else 1
-    
+
     return content.strip(), rows, cols, idx
 
 
@@ -484,17 +490,24 @@ class MarkdownParser:
             解析后的SlideSpec列表。
         """
         tokens = self._parser.parse(self.markdown_text)
-        
-        slides, current_slide, in_list_item, in_table, _ = reduce(
+
+        initial_state: tuple[list[SlideSpec], Maybe[SlideSpec], bool, bool, str | None] = (
+            [],
+            Maybe.from_optional(None),
+            False,
+            False,
+            None,
+        )
+        slides, current_slide, _, _, _ = reduce(
             self._reducer,
             tokens,
-            ([], Maybe.from_optional(None), False, False, None)
+            initial_state,
         )
-        
+
         slides = current_slide.map(lambda slide: _append_slide(slides, slide)).value_or(slides)
-        
+
         slides = self._assign_layout_hints(slides)
-        
+
         return slides
 
     def _assign_layout_hints(self, slides: list[SlideSpec]) -> list[SlideSpec]:
@@ -548,10 +561,16 @@ class MarkdownParser:
             return slides, current_slide, in_list_item, in_table, pending_layout_hint
 
         if _is_h1_heading_open(token):
-            new_slides = current_slide.map(
-                lambda slide: _append_slide(slides, slide)
-            ).value_or(slides)
-            return new_slides, Maybe.from_value(SlideSpec(title="", items=[], layout_hint=pending_layout_hint)), False, False, None
+            new_slides = current_slide.map(lambda slide: _append_slide(slides, slide)).value_or(
+                slides
+            )
+            return (
+                new_slides,
+                Maybe.from_value(SlideSpec(title="", items=[], layout_hint=pending_layout_hint)),
+                False,
+                False,
+                None,
+            )
 
         if _is_inline(token) and not in_list_item and not in_table:
             content = _token_text(token).strip()
@@ -583,7 +602,13 @@ class MarkdownParser:
             next_slide = _update_or_create(
                 current_slide,
                 lambda slide: _add_list_item(slide, content, runs),
-                lambda: SlideSpec(title="", items=[SlideItem(type=SlideItemType.LIST, content=content, meta={"runs": runs})], layout_hint=None),
+                lambda: SlideSpec(
+                    title="",
+                    items=[
+                        SlideItem(type=SlideItemType.LIST, content=content, meta={"runs": runs})
+                    ],
+                    layout_hint=None,
+                ),
             )
             return slides, next_slide, True, False, pending_layout_hint
 
@@ -594,7 +619,15 @@ class MarkdownParser:
             next_slide = _update_or_create(
                 current_slide,
                 lambda slide: _add_code_block_item(slide, content, language),
-                lambda: SlideSpec(title="", items=[SlideItem(type=SlideItemType.CODE, content=content, meta={"language": language})], layout_hint=None),
+                lambda: SlideSpec(
+                    title="",
+                    items=[
+                        SlideItem(
+                            type=SlideItemType.CODE, content=content, meta={"language": language}
+                        )
+                    ],
+                    layout_hint=None,
+                ),
             )
             return slides, next_slide, False, False, pending_layout_hint
 
@@ -605,14 +638,24 @@ class MarkdownParser:
             return slides, current_slide, False, False, pending_layout_hint
 
         if _is_image(token):
-            src = token.attrs.get("src", "") if token.attrs else ""
-            alt = token.attrs.get("alt", "") if token.attrs else ""
+            src_raw = token.attrs.get("src", "") if token.attrs else ""
+            alt_raw = token.attrs.get("alt", "") if token.attrs else ""
+            src = str(src_raw) if src_raw else ""
+            alt = str(alt_raw) if alt_raw else ""
             content = alt or src
 
             next_slide = _update_or_create(
                 current_slide,
                 lambda slide: _add_image_item(slide, content, src, alt),
-                lambda: SlideSpec(title="", items=[SlideItem(type=SlideItemType.IMAGE, content=content, meta={"src": src, "alt": alt})], layout_hint=None),
+                lambda: SlideSpec(
+                    title="",
+                    items=[
+                        SlideItem(
+                            type=SlideItemType.IMAGE, content=content, meta={"src": src, "alt": alt}
+                        )
+                    ],
+                    layout_hint=None,
+                ),
             )
             return slides, next_slide, False, False, pending_layout_hint
 
