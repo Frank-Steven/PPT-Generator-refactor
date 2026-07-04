@@ -1,0 +1,22 @@
+name: "Standard"
+version: "1.0.0"
+author: "PPT-Generator Team"
+description: "PPT-Generator 标准母版主题，蓝色系商务风格，适合大多数演示场景"
+spec_version: "1.0"
+compatible_generator: ">=1.0.0"
+
+files:
+  template: "template.pptx"
+  style: "style.yaml"
+  layouts: "layouts.yaml"
+  preview: "preview.png"
+
+preview:
+  color: "#1F4E79"
+
+tags:
+  - "standard"
+  - "business"
+  - "blue"
+  - "professional"
+  - "default"

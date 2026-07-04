@@ -1,0 +1,20 @@
+name: "Business Blue"
+version: "1.0.0"
+author: "PPT-Generator Team"
+description: "商务风格主题，蓝色调，适合企业汇报和演示"
+spec_version: "1.0"
+compatible_generator: ">=1.0.0"
+
+files:
+  template: "template.pptx"
+  style: "style.yaml"
+  layouts: "layouts.yaml"
+
+preview:
+  color: "#4472C4"
+
+tags:
+  - "business"
+  - "professional"
+  - "blue"
+  - "corporate"

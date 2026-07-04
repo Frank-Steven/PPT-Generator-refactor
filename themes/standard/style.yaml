@@ -1,0 +1,49 @@
+code:
+  font: "Consolas"
+  font_size: 11
+  theme: "monokai"
+  line_numbers: true
+  background_color: "#272822"
+  text_color: "#F8F8F2"
+  border_radius: 4
+  padding: 12
+  line_height: 1.4
+
+mermaid:
+  theme: "default"
+  background_color: "#FFFFFF"
+  scale: 2
+  padding: 10
+
+latex:
+  font_size: 14
+  background_color: "transparent"
+  dpi: 300
+  color: "#1F4E79"
+
+table:
+  font: "微软雅黑"
+  font_size: 10
+  header_background: "#1F4E79"
+  header_color: "#FFFFFF"
+  even_row_background: "#F5F7FA"
+  odd_row_background: "#FFFFFF"
+  border_color: "#D0D7DE"
+  border_width: 1
+
+run_overrides:
+  bold:
+    color: "#1F4E79"
+    font: "微软雅黑"
+  italic:
+    color: "#2E75B6"
+    font: "微软雅黑"
+  code:
+    font: "Consolas"
+    font_size: 10
+    background_color: "#F5F7FA"
+    color: "#C7254E"
+  link:
+    color: "#2E75B6"
+    underline: true
+    font: "微软雅黑"

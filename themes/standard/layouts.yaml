@@ -1,0 +1,166 @@
+version: "1.0"
+
+defaults:
+  default: "title-and-content"
+  first_slide: "title-slide"
+  section_divider: "section-header"
+  content: "title-and-content"
+  multi_column: "two-content"
+  media: "content-with-caption"
+  image: "picture-with-caption"
+  full_width: "blank"
+
+groups:
+  title:
+    display_name: "标题类"
+    description: "用于封面、章节分隔、结束页"
+  content:
+    display_name: "内容类"
+    description: "用于正文内容展示"
+  media:
+    display_name: "媒体类"
+    description: "用于图片、图表等媒体内容"
+  special:
+    display_name: "特殊类"
+    description: "空白页等特殊布局"
+
+layouts:
+  - id: "title-slide"
+    name: "Title Slide"
+    display_name: "标题幻灯片"
+    description: "用于演示文稿封面、章节分隔、结束页"
+    group: "title"
+    placeholders:
+      - index: 0
+        type: "title"
+        role: "main-title"
+        name: "Title 1"
+      - index: 1
+        type: "subtitle"
+        role: "subtitle"
+        name: "Subtitle 2"
+    keywords: ["标题", "封面", "title", "cover", "首页"]
+    tags: ["title", "cover"]
+    auto_apply:
+      conditions: ["first_slide", "last_slide"]
+      priority: 100
+
+  - id: "title-and-content"
+    name: "Title and Content"
+    display_name: "标题和内容"
+    description: "最常用的内容页布局，包含标题和正文区域"
+    group: "content"
+    placeholders:
+      - index: 0
+        type: "title"
+        role: "title"
+        name: "Title 1"
+      - index: 1
+        type: "body"
+        role: "main-content"
+        name: "Content Placeholder 2"
+    keywords: ["标题", "内容", "title", "content", "正文"]
+    tags: ["content", "default"]
+    auto_apply:
+      conditions: ["default"]
+      priority: 0
+
+  - id: "section-header"
+    name: "Section Header"
+    display_name: "章节标题"
+    description: "用于章节分隔，突出显示章节主题"
+    group: "title"
+    placeholders:
+      - index: 0
+        type: "title"
+        role: "section-title"
+        name: "Title 1"
+    keywords: ["章节", "标题", "section", "header", "分隔"]
+    tags: ["section", "divider"]
+    auto_apply:
+      conditions: ["section_divider"]
+      priority: 50
+
+  - id: "two-content"
+    name: "Two Content"
+    display_name: "双栏内容"
+    description: "左右两栏布局，适合对比展示或并列内容"
+    group: "content"
+    placeholders:
+      - index: 0
+        type: "title"
+        role: "title"
+        name: "Title 1"
+      - index: 1
+        type: "body"
+        role: "left-column"
+        name: "Content Placeholder 2"
+      - index: 2
+        type: "text"
+        role: "right-column"
+        name: "Content Placeholder 3"
+    keywords: ["双栏", "对比", "two column", "dual", "并列"]
+    tags: ["content", "two-column"]
+    auto_apply:
+      conditions: ["multi_column"]
+      priority: 30
+
+  - id: "content-with-caption"
+    name: "Content with Caption"
+    display_name: "带说明的内容"
+    description: "上方主要内容区域 + 下方说明文字"
+    group: "media"
+    placeholders:
+      - index: 0
+        type: "title"
+        role: "title"
+        name: "Title 1"
+      - index: 1
+        type: "body"
+        role: "main-content"
+        name: "Content Placeholder 2"
+      - index: 2
+        type: "text"
+        role: "caption"
+        name: "Text Placeholder 3"
+    keywords: ["说明", "注释", "caption", "内容", "图表说明"]
+    tags: ["media", "caption"]
+    auto_apply:
+      conditions: ["media"]
+      priority: 30
+
+  - id: "picture-with-caption"
+    name: "Picture with Caption"
+    display_name: "带说明的图片"
+    description: "图片展示 + 图片说明文字"
+    group: "media"
+    placeholders:
+      - index: 0
+        type: "title"
+        role: "title"
+        name: "Title 1"
+      - index: 1
+        type: "picture"
+        role: "picture"
+        name: "Picture Placeholder 2"
+      - index: 2
+        type: "text"
+        role: "caption"
+        name: "Text Placeholder 3"
+    keywords: ["图片", "照片", "picture", "image", "图注"]
+    tags: ["image", "caption"]
+    auto_apply:
+      conditions: ["image"]
+      priority: 40
+
+  - id: "blank"
+    name: "Blank"
+    display_name: "空白页"
+    description: "全空白布局，适合自定义内容和大图表"
+    group: "special"
+    placeholders: []
+    keywords: ["空白", "全屏", "blank", "全宽", "自定义"]
+    tags: ["blank", "full-width"]
+    auto_apply:
+      conditions: ["full_width"]
+      priority: 20
