@@ -20,6 +20,7 @@ prerendering = [
 ]
 test = [
     "pytest>=8.0",
+    "pytest-cov>=4.0",
 ]
 
 [project.scripts]
@@ -34,3 +35,59 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# ───────────────────────────── Ruff ─────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+# F = pyflakes, E/W = pycodestyle, I = isort, UP = pyupgrade,
+# B = bugbear, C4 = comprehensions, SIM = simplify, N = naming
+select = ["F", "E", "W", "I", "UP", "B", "C4", "SIM", "N"]
+ignore = [
+    "E501",  # 行长由 formatter 管理
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试文件允许未使用的 import（pytest fixture 等）和宽松命名
+"tests/**/*.py" = ["F401", "N802", "N803"]
+# scripts 允许未使用的变量（探索性脚本）
+"scripts/**/*.py" = ["F841"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ───────────────────────────── Mypy ─────────────────────────────
+[tool.mypy]
+python_version = "3.14"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
+
+# 第三方库缺少类型存根，统一忽略
+[[tool.mypy.overrides]]
+module = [
+    "pptx.*",
+    "pptx.util.*",
+    "pptx.dml.color.*",
+    "matplotlib.*",
+    "pygments.*",
+    "orjson.*",
+    "yaml.*",
+    "PIL.*",
+]
+ignore_missing_imports = true
+
+# ──────────────────────────── Pytest ────────────────────────────
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:pptx.*",
+]
